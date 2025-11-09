@@ -2,7 +2,318 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+/* ============================================
+   OPTIMIZACIONES MÓVILES
+   ============================================ */
+
+@layer base {
+  /* Reset y optimizaciones básicas */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  html {
+    /* Prevenir zoom en inputs en iOS */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Scroll suave */
+    scroll-behavior: smooth;
+  }
+
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    /* Optimización de fuentes móviles */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevenir selección accidental en elementos UI */
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Permitir selección de texto en elementos específicos */
+  input,
+  textarea,
+  p,
+  span,
+  h1, h2, h3, h4, h5, h6 {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  /* Mejorar rendimiento de animaciones */
+  *,
+  *::before,
+  *::after {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+/* ============================================
+   ANIMACIONES PERSONALIZADAS
+   ============================================ */
+
+@layer utilities {
+  /* Animación de entrada desde arriba */
+  @keyframes slideInFromTop {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Animación de entrada desde abajo */
+  @keyframes slideInFromBottom {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Animación de fade in */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Animación de escala */
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Animación de pulso suave */
+  @keyframes pulse-soft {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  /* Clases de animación */
+  .animate-slide-in-top {
+    animation: slideInFromTop 0.3s ease-out;
+  }
+
+  .animate-slide-in-bottom {
+    animation: slideInFromBottom 0.3s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+/* ============================================
+   ESTILOS PARA GESTOS TÁCTILES
+   ============================================ */
+
+@layer components {
+  /* Botones táctiles - área mínima 44x44px (Apple HIG) */
+  .btn-touch {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+
+  /* Feedback táctil activo */
+  .touch-feedback {
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+
+  .touch-feedback:active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Prevenir doble tap zoom en iOS */
+  .no-double-tap-zoom {
+    touch-action: manipulation;
+  }
+
+  /* Área de arrastre */
+  .draggable {
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  /* Scroll suave con momentum */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+}
+
+/* ============================================
+   MEJORAS DE RENDIMIENTO MÓVIL
+   ============================================ */
+
+@layer utilities {
+  /* Aceleración por hardware */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+
+  /* Optimizar scroll */
+  .optimize-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Ocultar scrollbar en móvil */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ============================================
+   ESTILOS PARA NOTIFICACIONES TOAST
+   ============================================ */
+
+@layer components {
+  .toast-enter {
+    animation: slideInFromTop 0.3s ease-out;
+  }
+
+  .toast-exit {
+    animation: slideInFromTop 0.3s ease-out reverse;
+  }
+}
+
+/* ============================================
+   SAFE AREA INSETS (iPhone X+)
+   ============================================ */
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ============================================
+   ESTADOS DE CARGA Y SKELETON
+   ============================================ */
+
+@layer components {
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #f0f0f0 25%,
+      #e0e0e0 50%,
+      #f0f0f0 75%
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+}
+
+/* ============================================
+   MEJORAS DE ACCESIBILIDAD MÓVIL
+   ============================================ */
+
+@layer utilities {
+  /* Aumentar área táctil sin cambiar visualmente */
+  .touch-area-expand::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+  }
+
+  /* Focus visible solo con teclado, no con touch */
+  .focus-keyboard:focus {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .focus-keyboard:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+/* ============================================
+   MEDIA QUERIES ESPECÍFICAS
+   ============================================ */
+
+/* Modo oscuro del sistema */
+@media (prefers-color-scheme: dark) {
+  /* Aquí podrías agregar estilos para modo oscuro si lo deseas */
+}
+
+/* Reducir movimiento para accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Pantallas de alta resolución */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Optimizaciones para pantallas retina */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
