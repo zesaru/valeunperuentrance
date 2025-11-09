@@ -25,6 +25,8 @@ function doPost(e) {
     const action = params.action;
 
     switch (action) {
+      case 'getParticipants':
+        return getParticipants();
       case 'updateParticipant':
         return updateParticipant(params);
       case 'batchUpdate':
@@ -44,6 +46,52 @@ function doGet(e) {
   return ContentService.createTextOutput(
     JSON.stringify({ status: 'OK', message: 'Event Management API is running' })
   ).setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Get all participants from the sheet
+ */
+function getParticipants() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+
+  if (!sheet) {
+    return createResponse(false, 'Sheet not found: ' + SHEET_NAME);
+  }
+
+  // Get all data from columns A to J
+  const range = sheet.getRange('A:J');
+  const values = range.getValues();
+
+  if (!values || values.length === 0) {
+    return createResponse(true, 'No participants found', { participants: [] });
+  }
+
+  // First row is headers, skip it
+  const participants = [];
+  for (let i = 1; i < values.length; i++) {
+    const row = values[i];
+
+    // Skip empty rows
+    if (!row[0] && !row[2] && !row[4]) continue;
+
+    participants.push({
+      rowIndex: i + 1, // +1 because sheets are 1-indexed
+      timestamp: row[0] || '',
+      participating: row[1] || '',
+      fullName: row[2] || '',
+      companyName: row[3] || '',
+      email: row[4] || '',
+      column5: row[5] || '',
+      column6: row[6] || '',
+      qrCodeUuid: row[7] || '',
+      status: row[8] || '',
+      attendance: row[9] || ''
+    });
+  }
+
+  return createResponse(true, `Found ${participants.length} participants`, {
+    participants
+  });
 }
 
 /**

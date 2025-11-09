@@ -38,7 +38,7 @@ Aplicación web para gestión de eventos desarrollada con React, Tailwind CSS, V
 npm install
 ```
 
-### 2. Configuración de Google Sheets
+### 2. Preparar tu Google Sheet
 
 #### Estructura de la hoja de cálculo
 
@@ -48,49 +48,34 @@ Tu Google Sheet debe tener las siguientes columnas (A-J):
 |---|---|---|---|---|---|---|---|---|---|
 | Marca temporal | ¿Participar en seminario? | 氏名 Full Name | 会社名 Company Name | メールアドレス E-mail Address | Columna 5 | Columna 6 | QR Code UUID | Status | Attendance |
 
-#### Obtener Google API Key
+### 3. Configurar Google Apps Script
 
-1. Ve a [Google Cloud Console](https://console.cloud.google.com/)
-2. Crea un nuevo proyecto o selecciona uno existente
-3. Habilita "Google Sheets API"
-4. Ve a "Credenciales" > "Crear credenciales" > "Clave de API"
-5. Copia la API Key generada
-6. (Opcional) Restringe la API Key solo para Google Sheets API
-
-#### Obtener Spreadsheet ID
-
-El ID del spreadsheet está en la URL de tu Google Sheet:
-
-```
-https://docs.google.com/spreadsheets/d/[SPREADSHEET_ID]/edit
-```
-
-#### Configurar permisos de la hoja
+Google Apps Script permite que la aplicación lea y actualice los datos de tu hoja de cálculo de forma segura, sin necesidad de configurar APIs adicionales.
 
 1. Abre tu Google Sheet
-2. Haz clic en "Compartir"
-3. Cambia el acceso a "Cualquier persona con el enlace puede ver"
-4. Esto permite que la API lea los datos sin autenticación OAuth
+2. Ve a **Extensiones > Apps Script**
+3. Borra el código predeterminado
+4. Copia todo el contenido del archivo `google-apps-script/Code.gs` de este repositorio
+5. Pégalo en el editor de Apps Script
+6. **Importante**: Actualiza la variable `SHEET_NAME` en la línea 17 si tu hoja tiene un nombre diferente a "Sheet1"
+7. Guarda el proyecto (Ctrl+S o Cmd+S)
+8. Haz clic en **Implementar > Nueva implementación**
+9. Haz clic en el ícono de engranaje ⚙️ junto a "Tipo" y selecciona **Aplicación web**
+10. Configura los siguientes parámetros:
+    - **Descripción**: "Event Management API" (opcional)
+    - **Ejecutar como**: **Yo** (tu cuenta de Google)
+    - **Quién tiene acceso**: **Cualquier persona**
+11. Haz clic en **Implementar**
+12. La primera vez te pedirá autorización:
+    - Haz clic en **Autorizar acceso**
+    - Selecciona tu cuenta de Google
+    - Haz clic en **Avanzado** (si aparece una advertencia)
+    - Haz clic en **Ir a [nombre del proyecto] (no seguro)**
+    - Haz clic en **Permitir**
+13. Copia la **URL de la aplicación web** que aparece
+14. Guarda esta URL, la necesitarás en el siguiente paso
 
-### 3. Configuración de Google Apps Script (para escritura)
-
-Para poder actualizar el estado y la asistencia en Google Sheets, necesitas desplegar un Google Apps Script:
-
-1. Abre tu Google Sheet
-2. Ve a **Extensions > Apps Script**
-3. Copia el contenido del archivo `google-apps-script/Code.gs` en el editor
-4. Actualiza la variable `SHEET_NAME` si tu hoja tiene un nombre diferente
-5. Guarda el proyecto
-6. Haz clic en **Deploy > New deployment**
-7. Selecciona tipo: **Web app**
-8. Configuración:
-   - Execute as: **Me**
-   - Who has access: **Anyone**
-9. Haz clic en **Deploy**
-10. Copia la **Web App URL** generada
-11. Autoriza los permisos solicitados
-
-### 4. Variables de Entorno
+### 4. Configurar Variables de Entorno
 
 Crea un archivo `.env` en la raíz del proyecto:
 
@@ -98,17 +83,14 @@ Crea un archivo `.env` en la raíz del proyecto:
 cp .env.example .env
 ```
 
-Edita el archivo `.env` con tus credenciales:
+Edita el archivo `.env` y pega la URL de tu Google Apps Script:
 
 ```env
-# Google Sheets API Configuration
-VITE_GOOGLE_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXX
-VITE_SPREADSHEET_ID=1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p
-VITE_SHEET_NAME=Sheet1
-
-# Google Apps Script Web App URL (for write operations)
+# Google Apps Script Web App URL
 VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/XXXXX/exec
 ```
+
+Reemplaza `https://script.google.com/macros/s/XXXXX/exec` con la URL que copiaste en el paso anterior.
 
 ## Ejecución del Proyecto
 
@@ -209,18 +191,23 @@ valeunperuentrance/
 
 ## Solución de Problemas
 
+### Error: "Apps Script URL not configured"
+
+- Verifica que hayas desplegado el Google Apps Script correctamente
+- Confirma que la variable `VITE_APPS_SCRIPT_URL` esté configurada en `.env`
+- Asegúrate que la URL sea la correcta (debe terminar en `/exec`)
+
 ### Error: "Failed to fetch participants"
 
-- Verifica que la Google API Key sea correcta
-- Confirma que el Spreadsheet ID es válido
-- Asegúrate que la hoja sea accesible públicamente
-- Verifica que Google Sheets API esté habilitada en Google Cloud Console
+- Verifica que el Google Apps Script esté implementado correctamente
+- Confirma que hayas autorizado los permisos cuando se solicitó
+- Asegúrate que el nombre de la hoja (`SHEET_NAME`) sea correcto en Code.gs
+- Revisa la consola del Apps Script para ver si hay errores (Executions en el menú lateral)
 
-### Error: "Write operations not yet configured"
+### Error: "Sheet not found"
 
-- Verifica que hayas desplegado el Google Apps Script
-- Confirma que la variable `VITE_APPS_SCRIPT_URL` esté configurada en `.env`
-- Asegúrate que el Apps Script tenga los permisos correctos
+- Verifica que la variable `SHEET_NAME` en `google-apps-script/Code.gs` coincida con el nombre de tu hoja
+- El nombre debe ser exactamente igual (distingue mayúsculas/minúsculas)
 
 ### La cámara no se activa para escanear QR
 
@@ -238,18 +225,22 @@ valeunperuentrance/
 
 ### Recomendaciones de Producción
 
-1. **Restringir API Key**: En Google Cloud Console, restringe la API Key para:
-   - Solo Google Sheets API
-   - Solo dominios específicos (tu dominio de producción)
-
-2. **HTTPS**: Despliega siempre en HTTPS para:
-   - Acceso a cámara (requerido)
+1. **HTTPS**: Despliega siempre en HTTPS para:
+   - Acceso a cámara (requerido por los navegadores)
    - Seguridad de datos
-   - Mejores prácticas
+   - Mejores prácticas web
 
-3. **Variables de Entorno**: Nunca commitees el archivo `.env` al repositorio
+2. **Variables de Entorno**: Nunca commitees el archivo `.env` al repositorio
+   - El archivo `.env` está incluido en `.gitignore`
+   - Usa variables de entorno en tu plataforma de deploy
 
-4. **Apps Script**: Considera cambiar el acceso de "Anyone" a "Anyone within your organization" si es un evento interno
+3. **Apps Script - Acceso**:
+   - Si es un evento interno/privado, cambia "Cualquier persona" a "Cualquier usuario de [tu organización]" al implementar
+   - Considera usar un dominio personalizado para mayor profesionalismo
+
+4. **Datos Sensibles**:
+   - Ten cuidado con la información personal en tu Google Sheet
+   - Revisa regularmente quién tiene acceso a la hoja de cálculo
 
 ## Deploy
 
